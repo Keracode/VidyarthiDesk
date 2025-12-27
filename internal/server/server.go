@@ -7,9 +7,8 @@ import (
 
 	"github.com/Keracode/vidyarthidesk-backend/config"
 	"github.com/Keracode/vidyarthidesk-backend/internal/db"
+	"github.com/Keracode/vidyarthidesk-backend/internal/middleware"
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/cors"
-	"github.com/gofiber/fiber/v3/middleware/session"
 )
 
 type WebServer struct {
@@ -44,19 +43,9 @@ func (s *WebServer) Shutdown(ctx context.Context) error {
 }
 
 func (s *WebServer) SetupMiddleware() {
-	s.App.Use(cors.New(cors.Config{
-		AllowOriginsFunc: func(origin string) bool {
-			return true
-		},
-		AllowCredentials: true,
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type"},
-	}))
+	s.App.Use(middleware.SetupCORS())
 
-	s.App.Use(session.New(session.Config{
-		CookieHTTPOnly: true,
-		CookieSecure:   true,
-	}))
+	s.App.Use(middleware.SetupSession())
 }
 
 func New(cfg *config.Config) *WebServer {
