@@ -135,3 +135,18 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshTokenString strin
 		RefreshToken: newRefresh,
 	}, nil
 }
+
+func (s *AuthService) GetMe(ctx context.Context, claim *jwt.Claims) (*dto.UserRes, error) {
+	user, err := s.userRepo.GetUserById(ctx, claim.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.UserRes{
+		ID:        user.ID,
+		Email:     user.Email,
+		Name:      user.Name,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}, nil
+}

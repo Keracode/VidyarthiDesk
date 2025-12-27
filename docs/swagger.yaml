@@ -35,6 +35,25 @@ definitions:
         example: 550e8400-e29b-41d4-a716-446655440000
         type: string
     type: object
+  dto.UserRes:
+    description: User information structure
+    properties:
+      createdAt:
+        example: "2024-01-01T00:00:00Z"
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      name:
+        example: John Doe
+        type: string
+      updatedAt:
+        example: "2024-01-15T10:30:00Z"
+        type: string
+    type: object
 host: localhost:9000
 info:
   contact:
@@ -81,6 +100,29 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorRes'
       summary: User login
+      tags:
+      - Authentication
+  /auth/me:
+    get:
+      description: Get the authenticated user's information from JWT token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Current user information
+          schema:
+            $ref: '#/definitions/dto.UserRes'
+        "401":
+          description: user not found
+          schema:
+            $ref: '#/definitions/dto.ErrorRes'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorRes'
+      security:
+      - BearerAuth: []
+      summary: Get current user
       tags:
       - Authentication
   /auth/refresh:

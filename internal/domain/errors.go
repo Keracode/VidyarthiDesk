@@ -20,4 +20,9 @@ var (
 	ErrUserNotFound       = errors.New("user not found")
 	ErrUserAlreadyExists  = errors.New("user already exists")
 	ErrInvalidCredentials = errors.New("invalid credentials")
+
+	// Token errors
+	ErrInvalidToken = errors.New("invalid token")
+	ErrExpiredToken = errors.New("token has expired")
+	ErrNoClaims     = errors.New("no claims found in context")
 )

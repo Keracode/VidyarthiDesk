@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/Keracode/vidyarthidesk-backend/internal/handlers"
+	"github.com/Keracode/vidyarthidesk-backend/internal/middleware"
 	"github.com/Keracode/vidyarthidesk-backend/internal/repository"
 	"github.com/Keracode/vidyarthidesk-backend/internal/services"
 	"github.com/gofiber/fiber/v3"
@@ -32,6 +33,10 @@ func (s *WebServer) RegisterRoutes() {
 
 	api.Post("/auth/login", authHandler.Login)
 	api.Post("/auth/refresh", authHandler.RefreshToken)
+
+	protected := api.Group("/", middleware.JWTMiddleware(s.Config.JWTSecret))
+
+	protected.Get("/auth/me", authHandler.Me)
 }
 
 func (s *WebServer) HandleIndexRotue(c fiber.Ctx) error {

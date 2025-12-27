@@ -6,6 +6,7 @@ import (
 	"github.com/Keracode/vidyarthidesk-backend/internal/domain"
 	"github.com/Keracode/vidyarthidesk-backend/internal/dto"
 	"github.com/Keracode/vidyarthidesk-backend/internal/services"
+	"github.com/Keracode/vidyarthidesk-backend/pkg/jwt"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/session"
 )
@@ -54,8 +55,7 @@ func (h *AuthHandler) Login(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
-// RefreshToken godoc
-//
+// RefreshToken godoc //
 // @Summary      Refresh access token
 // @Description  Generate new access token and refresh token using existing refresh token from session. Old refresh token is revoked.
 // @Tags         Authentication
@@ -83,11 +83,37 @@ func (h *AuthHandler) RefreshToken(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(res)
 }
 
+// GetMe godoc
+//
+// @Summary      Get current user
+// @Description  Get the authenticated user's information from JWT token
+// @Tags         Authentication
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  dto.UserRes   "Current user information"
+// @Failure      401  {object}  dto.ErrorRes  "user not found"
+// @Failure      500  {object}  dto.ErrorRes  "Internal server error"
+// @Router       /auth/me [get]
+func (h *AuthHandler) Me(c fiber.Ctx) error {
+	claims, err := jwt.GetClaims(c)
+	if err != nil {
+		return h.handleError(c, err)
+	}
+
+	res, err := h.service.GetMe(c.Context(), claims)
+	if err != nil {
+		return h.handleError(c, err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(res)
+}
+
 func (h *AuthHandler) handleError(c fiber.Ctx, err error) error {
 	switch {
 	case errors.Is(err, domain.ErrInvalidCredentials):
 		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorRes{
-			Error: "Invalid credentials",
+			Error:   "Invalid credentials",
+			Message: "Email or password is incorrect",
 		})
 	case errors.Is(err, domain.ErrInvalidRefreshToken):
 		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorRes{
@@ -99,7 +125,28 @@ func (h *AuthHandler) handleError(c fiber.Ctx, err error) error {
 		})
 	case errors.Is(err, domain.ErrTokenRevoked):
 		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorRes{
-			Error: "Token has been revoked",
+			Error:   "Unauthorized",
+			Message: "Token has been revoked",
+		})
+	case errors.Is(err, domain.ErrInvalidToken):
+		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorRes{
+			Error:   "Unauthorized",
+			Message: domain.ErrInvalidToken.Error(),
+		})
+	case errors.Is(err, domain.ErrExpiredToken):
+		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorRes{
+			Error:   "Unauthorized",
+			Message: domain.ErrExpiredToken.Error(),
+		})
+	case errors.Is(err, domain.ErrNoClaims):
+		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorRes{
+			Error:   "Unauthorized",
+			Message: domain.ErrNoClaims.Error(),
+		})
+	case errors.Is(err, domain.ErrUserNotFound):
+		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorRes{
+			Error:   "Unauthorized",
+			Message: domain.ErrUserNotFound.Error(),
 		})
 	default:
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorRes{
